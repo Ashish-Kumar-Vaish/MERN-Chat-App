@@ -1,0 +1,109 @@
+@import url("https://fonts.googleapis.com/css2?family=Audiowide&display=swap");
+
+.list {
+  display: flex;
+  flex-direction: column;
+  min-width: 35vmin;
+  height: 100%;
+  border-right: 0.3vmin solid rgb(40, 40, 40);
+  color: rgb(180, 185, 192);
+  background-color: rgb(49, 51, 56);
+
+  .logo {
+    font-family: "Audiowide";
+    font-size: 1.3rem;
+    text-align: center;
+    margin: 1.5vmin 0 1vmin 0;
+    color: rgba(213, 213, 213, 0.8);
+    letter-spacing: 0.5rem;
+    text-shadow: 0.15rem 0.15rem 0.1rem rgb(26, 26, 26);
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  .userInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 2vmin 0 1.5vmin 0;
+
+    .user {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100%;
+      width: 100%;
+      cursor: pointer;
+
+      .profilePicture {
+        height: 5vmin;
+        aspect-ratio: 1;
+        border: 0.25vmin solid rgb(130, 130, 130);
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 1.2vmin;
+      }
+
+      .nameDiv {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+
+        span.name {
+          font-size: 1.2rem;
+          display: block;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        span.username {
+          font-size: 0.9rem;
+          display: block;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+  }
+
+  .discover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 12vmin;
+    margin-bottom: 1.5vmin;
+
+    .discoverRoomBtn {
+      height: 100%;
+      width: 80%;
+      background: transparent;
+      color: rgb(213, 213, 213);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      border-radius: 1.5vmin;
+      cursor: pointer;
+
+      svg {
+        width: 3vmin;
+        aspect-ratio: 1;
+        margin-left: 1.4vmin;
+      }
+    }
+
+    .discoverRoomBtn:hover {
+      background-color: rgb(56, 58, 64);
+    }
+  }
+}

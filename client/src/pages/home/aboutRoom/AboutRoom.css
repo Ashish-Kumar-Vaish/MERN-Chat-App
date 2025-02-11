@@ -1,0 +1,413 @@
+.aboutRoom {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(49, 51, 56);
+
+  .topArea {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    height: 10%;
+
+    .backBtn {
+      cursor: pointer;
+      border: none;
+      color: rgb(180, 185, 192);
+      background: transparent;
+      border-radius: 50%;
+      width: 7vmin;
+      aspect-ratio: 1;
+
+      svg {
+        aspect-ratio: 1;
+      }
+    }
+
+    .backBtn:hover {
+      color: rgb(140, 144, 150);
+    }
+
+    span {
+      color: rgb(180, 185, 192);
+      font-size: 1.4rem;
+      font-weight: 600;
+      display: block;
+    }
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    scrollbar-width: none;
+
+    .room {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 80%;
+      margin: 2% 10%;
+
+      .roomDetail {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+
+        .roomProfilePicture {
+          height: 15vmin;
+          aspect-ratio: 1;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 0.25vmin solid rgb(130, 130, 130);
+        }
+
+        .roomNameWrapper {
+          margin-left: 4vmin;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+
+          .roomName {
+            display: flex;
+            margin-bottom: 0.5vmin;
+
+            span {
+              font-size: 1.8rem;
+              font-weight: 600;
+              display: block;
+              overflow: hidden;
+              white-space: nowrap;
+              text-overflow: ellipsis;
+              max-height: 2.4rem;
+              color: rgb(180, 185, 192);
+            }
+
+            .membersWrapper {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+
+              .roomMembers {
+                font-size: 1rem;
+                display: block;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                color: rgb(180, 185, 192);
+              }
+
+              svg {
+                margin: 0 0.5vmin 0 1.5vmin;
+                color: rgb(140, 190, 255);
+                width: 2.5vmin;
+                aspect-ratio: 1;
+              }
+            }
+          }
+
+          .roomOwner {
+            display: flex;
+            margin-bottom: 0.5vmin;
+
+            span {
+              font-size: 0.9rem;
+              color: rgb(153, 157, 162);
+              display: block;
+              overflow: hidden;
+              white-space: nowrap;
+              text-overflow: ellipsis;
+            }
+
+            svg {
+              margin-right: 0.5vmin;
+              color: rgb(255, 212, 59);
+              width: 2.5vmin;
+              aspect-ratio: 1;
+            }
+          }
+
+          .buttonWrapper {
+            .btn {
+              background-color: rgb(37, 39, 43);
+              color: rgb(180, 185, 192);
+              height: 5vmin;
+              min-width: 14vmin;
+              width: fit-content;
+              border: none;
+              border-radius: 1.1vmin;
+              cursor: pointer;
+              font-size: 2vmin;
+              font-weight: 600;
+              margin: 1vmin 1vmin 0 0;
+              padding: 1vmin;
+            }
+
+            .btn:hover {
+              color: rgb(219, 224, 231);
+              background-color: rgb(120, 122, 128);
+            }
+
+            .red {
+              color: rgb(192, 196, 202);
+              background-color: rgb(179, 0, 0);
+            }
+
+            .red:hover {
+              color: rgb(219, 224, 231);
+              background-color: rgb(223, 0, 0);
+            }
+          }
+        }
+      }
+    }
+
+    .roomDescription {
+      width: 76%;
+      min-height: 20vh;
+      max-height: 50vh;
+      margin: 2% 10%;
+      padding: 2%;
+      font-size: 1.2rem;
+      color: rgb(180, 185, 192);
+      overflow: auto;
+      background-color: rgb(39, 40, 45);
+      border-radius: 1.5vmin;
+      white-space: pre-line;
+      word-break: break-word;
+    }
+
+    .ownerSettings {
+      display: flex;
+      /* justify-content: center; */
+      justify-content: flex-end;
+      align-items: center;
+      width: 80%;
+      margin: 0 10%;
+
+      .buttonWrapper {
+        .btn {
+          background-color: rgb(37, 39, 43);
+          color: rgb(180, 185, 192);
+          height: 5vmin;
+          min-width: 14vmin;
+          width: fit-content;
+          border: none;
+          border-radius: 1.1vmin;
+          cursor: pointer;
+          font-weight: 600;
+          margin-left: 1vmin;
+          padding: 1vmin;
+        }
+
+        .btn:hover {
+          color: rgb(219, 224, 231);
+          background-color: rgb(120, 122, 128);
+        }
+
+        .red {
+          color: rgb(192, 196, 202);
+          background-color: rgb(179, 0, 0);
+        }
+
+        .red:hover {
+          color: rgb(219, 224, 231);
+          background-color: rgb(223, 0, 0);
+        }
+      }
+    }
+  }
+
+  .formContainer {
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    scrollbar-width: none;
+
+    .myForm {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .errorMsg {
+        color: red;
+        font-weight: 500;
+        margin-top: 1vmin;
+      }
+
+      .room {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 80%;
+        margin: 2% 10%;
+
+        .roomDetail {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+
+          .roomProfilePicture {
+            height: 15vmin;
+            width: 15vmin;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            border: 0.25vmin solid rgb(130, 130, 130);
+            outline: none;
+            cursor: pointer;
+
+            &::file-selector-button {
+              visibility: hidden;
+              color: transparent;
+            }
+
+            &::-webkit-file-upload-button {
+              visibility: hidden;
+              color: transparent;
+            }
+          }
+
+          .pfpWrapper {
+            position: relative;
+
+            &::after {
+              content: "";
+              position: absolute;
+              top: 0;
+              right: 0;
+              height: 25%;
+              width: 25%;
+              background-color: rgb(255, 255, 255);
+              background-image: url("/assets/pen-solid.png");
+              background-size: 60%;
+              background-repeat: no-repeat;
+              background-position: center;
+              border-radius: 50%;
+              filter: invert(70%) sepia(30%) hue-rotate(180deg);
+            }
+          }
+
+          .roomName {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-left: 10%;
+
+            label {
+              width: 100%;
+              text-align: left;
+              color: rgb(180, 185, 192);
+              font-size: 1.4rem;
+              margin: 0 0 2% 2%;
+            }
+
+            input {
+              color: rgb(180, 185, 192);
+              background-color: rgb(39, 40, 45);
+              border-radius: 1.5vmin;
+              padding: 1vmin;
+              height: 2rem;
+              border: none;
+              outline: none;
+              font-size: 1.2rem;
+              margin-bottom: 1vmin;
+            }
+
+            input::placeholder {
+              font-size: 1rem;
+              color: rgba(180, 185, 192, 0.256);
+            }
+          }
+        }
+      }
+
+      .roomDescription {
+        width: 76%;
+        margin: 0 10% 2% 10%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        label {
+          width: 100%;
+          text-align: left;
+          color: rgb(180, 185, 192);
+          font-size: 1.4rem;
+          margin: 1vmin;
+        }
+
+        textarea {
+          width: 100%;
+          min-height: 20vh;
+          max-height: 50vh;
+          color: rgb(180, 185, 192);
+          font-size: 1.2rem;
+          resize: none;
+          background-color: rgb(39, 40, 45);
+          border-radius: 1.5vmin;
+          padding: 2.63%;
+          outline: none;
+          border: none;
+        }
+
+        textarea::placeholder {
+          font-size: 1rem;
+          color: rgba(180, 185, 192, 0.256);
+        }
+      }
+
+      .ownerSettings {
+        display: flex;
+        /* justify-content: center; */
+        justify-content: flex-end;
+        align-items: center;
+        width: 80%;
+        margin: 0 10%;
+
+        .buttonWrapper {
+          .btn {
+            background-color: rgb(37, 39, 43);
+            color: rgb(180, 185, 192);
+            height: 5vmin;
+            min-width: 14vmin;
+            width: fit-content;
+            border: none;
+            border-radius: 1.1vmin;
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: 1vmin;
+            padding: 1vmin;
+          }
+
+          .btn:hover {
+            color: rgb(219, 224, 231);
+            background-color: rgb(120, 122, 128);
+          }
+
+          .red {
+            color: rgb(192, 196, 202);
+            background-color: rgb(179, 0, 0);
+          }
+
+          .red:hover {
+            color: rgb(219, 224, 231);
+            background-color: rgb(223, 0, 0);
+          }
+        }
+      }
+    }
+  }
+}

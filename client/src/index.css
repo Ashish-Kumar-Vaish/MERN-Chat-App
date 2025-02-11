@@ -1,0 +1,38 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+* {
+  font-family: "Outfit", sans-serif;
+  font-size: 2.2vmin;
+  padding: 0;
+  margin: 0;
+
+  body {
+    background: url(/assets/bg-light.jpg);
+  }
+}
+
+a {
+  text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 3vmin;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(49, 51, 56);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(40, 40, 44);
+  border: 0.5vmin solid rgb(49, 51, 56);
+  border-radius: 100vw;
+  min-height: 5vmin;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(37, 38, 41);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgb(32, 33, 36);
+}
