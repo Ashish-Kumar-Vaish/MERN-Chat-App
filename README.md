@@ -33,7 +33,7 @@ To run this project, you will need to add the following environment variables to
 
 
 ## 🔗 Links
-[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](www.linkedin.com/in/ashishkumarvaish)
+[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ashishkumarvaish)
 
 ## 🛠 Skills
 Javascript, HTML, CSS, MongoDB, Express, React, Node, C, C++ as of February 2025
