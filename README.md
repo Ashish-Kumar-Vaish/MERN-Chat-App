@@ -38,3 +38,12 @@ To run this project, you will need to add the following environment variables to
 ## 🛠 Skills
 Javascript, HTML, CSS, MongoDB, Express, React, Node, C, C++ as of February 2025
 
+## Screenshots
+
+<div style="white-space: nowrap; overflow-x: auto;">
+  <img src="https://i.imgur.com/3RGs7Xd.jpg" style="display: inline-block; width: 300px; margin-right: 10px;" alt="Screenshot 1">
+  <img src="https://i.imgur.com/zezGmAJ.jpg" style="display: inline-block; width: 300px; margin-right: 10px;" alt="Screenshot 2">
+  <img src="https://i.imgur.com/NsyXmSa.jpg" style="display: inline-block; width: 300px; margin-right: 10px;" alt="Screenshot 3">
+  <img src="https://i.imgur.com/Vtw7a0M.jpg" style="display: inline-block; width: 300px; margin-right: 10px;" alt="Screenshot 4">
+  <img src="https://i.imgur.com/0HpybE9.jpg" style="display: inline-block; width: 300px; margin-right: 10px;" alt="Screenshot 5">
+</div>
