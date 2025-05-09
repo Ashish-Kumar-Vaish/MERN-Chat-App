@@ -28,21 +28,21 @@
         font-weight: 600;
         margin: 0 1vmin;
         padding: 1vmin;
-      }
 
-      .btn:hover {
-        color: rgb(219, 224, 231);
-        background-color: rgb(120, 122, 128);
+        &:hover {
+          color: rgb(219, 224, 231);
+          background-color: rgb(120, 122, 128);
+        }
       }
 
       .red {
         color: rgb(192, 196, 202);
         background-color: rgb(179, 0, 0);
-      }
 
-      .red:hover {
-        color: rgb(219, 224, 231);
-        background-color: rgb(223, 0, 0);
+        &:hover {
+          color: rgb(219, 224, 231);
+          background-color: rgb(223, 0, 0);
+        }
       }
     }
   }

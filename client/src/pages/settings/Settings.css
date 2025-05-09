@@ -27,21 +27,21 @@
         border: none;
         color: rgb(180, 185, 192);
         background: transparent;
-        border-radius: 50%;
         width: 7vmin;
         aspect-ratio: 1;
+
+        &:hover {
+          background-color: rgb(49, 51, 56);
+          color: rgb(140, 144, 150);
+        }
 
         svg {
           aspect-ratio: 1;
         }
       }
 
-      .backBtn:hover {
-        background-color: rgb(49, 51, 56);
-        color: rgb(140, 144, 150);
-      }
-
       span {
+        color: rgb(180, 185, 192);
         font-size: 1.2rem;
         font-weight: 600;
       }
@@ -58,14 +58,14 @@
       border: none;
       cursor: pointer;
       padding: 0 3vmin;
-    }
 
-    .optionBtn:hover {
-      background-color: rgb(56, 58, 64);
-    }
+      &:hover {
+        background-color: rgb(56, 58, 64);
+      }
 
-    .optionBtn:focus {
-      background-color: rgb(56, 58, 64);
+      &:focus {
+        background-color: rgb(56, 58, 64);
+      }
     }
   }
 

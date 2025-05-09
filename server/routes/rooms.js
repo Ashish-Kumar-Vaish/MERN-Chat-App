@@ -3,30 +3,38 @@ const router = express.Router();
 const userInfo = require("../schemas/userInfo");
 const roomInfo = require("../schemas/roomInfo");
 const { v4: uuidv4 } = require("uuid");
+const { verifyToken } = require("../middleware/verifyToken");
 
 // room details
 router.get("/roomDetails", async (req, res) => {
   try {
-    const room = await roomInfo.findOne({
-      roomId: req.headers["roomid"],
-    });
-    if (room) {
-      res.json({
-        success: true,
-        roomDetails: {
-          roomId: room.roomId,
-          roomName: room.roomName,
-          roomPfp: room.roomPfp,
-          roomDescription: room.roomDescription,
-          roomOwner: room.roomOwner,
-          roomMembers: room.roomMembers,
-        },
-      });
-    } else {
-      res.status(400).json({ err: "No rooms joined." });
+    const roomId = req.headers["roomid"];
+
+    if (!roomId) {
+      return res.status(400).json({ error: "Room ID is required." });
     }
+
+    const room = await roomInfo.findOne({
+      roomId: roomId,
+    });
+
+    if (!room) {
+      return res.status(404).json({ error: "No rooms found." });
+    }
+
+    res.json({
+      success: true,
+      roomDetails: {
+        roomId: room.roomId,
+        roomName: room.roomName,
+        roomPfp: room.roomPfp,
+        roomDescription: room.roomDescription,
+        roomOwner: room.roomOwner,
+        roomMembers: room.roomMembers,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ err: "Server error." });
+    res.status(500).json({ error: "Server error." });
   }
 });
 
@@ -50,25 +58,31 @@ router.get("/featuredRooms", async (req, res) => {
   }
 });
 
-// search rooms
-router.post("/search", async (req, res) => {
+// Search rooms
+router.post("/searchRooms", async (req, res) => {
   try {
+    const { searchRooms } = req.body;
+
+    if (!searchRooms) {
+      return res.status(400).json({ error: "Search query is required." });
+    }
+
     const searchedRooms = await roomInfo
       .find(
-        { roomName: new RegExp(req.body.searchRooms, "i") },
+        { roomName: new RegExp(searchRooms, "i") },
         { roomId: 1, roomName: 1, roomPfp: 1, _id: 0 }
       )
       .sort({ roomMembers: 1 })
       .limit(15);
 
-    if (searchedRooms) {
-      res.json({
-        success: true,
-        searchedRooms: searchedRooms,
-      });
-    } else {
-      res.status(400).json({ err: "No rooms found." });
+    if (!searchedRooms) {
+      return res.status(400).json({ error: "No rooms found." });
     }
+
+    res.json({
+      success: true,
+      searchedRooms: searchedRooms,
+    });
   } catch (err) {
     res.status(500).json({ err: "Server error." });
   }
@@ -78,32 +92,38 @@ router.post("/search", async (req, res) => {
 router.post("/createRoom", async (req, res) => {
   try {
     const id = uuidv4();
-    const room = await roomInfo.insertMany({
-      roomName: req.body.roomName,
+    const { roomName, roomPfp, roomDescription, senderUsername } = req.body;
+
+    if (!roomName || !senderUsername) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
+
+    const room = await roomInfo.create({
+      roomName: roomName,
       roomId: id,
-      roomPfp: req.body.roomPfp,
-      roomDescription: req.body.roomDescription,
-      roomOwner: req.body.senderUsername,
+      roomPfp: roomPfp,
+      roomDescription: roomDescription,
+      roomOwner: senderUsername,
       roomMembers: [
         {
-          memberUsername: req.body.senderUsername,
+          memberUsername: senderUsername,
         },
       ],
       messageHistory: [
         {
           message: `created the room on ${new Date().toLocaleString()}`,
           position: "center",
-          senderUsername: req.body.senderUsername,
+          senderUsername: senderUsername,
         },
       ],
     });
 
     await userInfo.findOneAndUpdate(
-      { username: req.body.senderUsername },
+      { username: senderUsername },
       {
         $push: {
           roomsJoined: {
-            $each: [{ roomId: room[0].roomId }],
+            $each: [{ roomId: room.roomId }],
           },
         },
       },
@@ -112,62 +132,85 @@ router.post("/createRoom", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      roomId: room[0].roomId,
+      roomId: room.roomId,
+      roomName: room.roomName,
+      roomPfp: room.roomPfp,
     });
-  } catch (err) {
-    res.status(500).json({ err: "Server error." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
 // edit room
-router.post("/editRoom", async (req, res) => {
+router.post("/editRoom", verifyToken, async (req, res) => {
   try {
-    const user = await roomInfo.findOneAndUpdate(
-      { roomId: req.body.roomId },
+    const user = req.user;
+    const { roomId, roomName, roomPfp, roomDescription } = req.body;
+
+    const room = await roomInfo.findOne({ roomId: roomId });
+
+    if (!room) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+
+    if (room.roomOwner !== user.username) {
+      return res
+        .status(401)
+        .json({ error: "You are not the owner of this room." });
+    }
+
+    await roomInfo.updateOne(
+      { roomId: roomId },
       {
         $set: {
-          roomName: req.body.roomName,
-          roomPfp: req.body.roomPfp,
-          roomDescription: req.body.roomDescription,
+          roomName: roomName,
+          roomPfp: roomPfp,
+          roomDescription: roomDescription,
         },
-      },
-      { new: true }
+      }
     );
 
-    if (user) {
-      res.status(200).json({ success: true, roomId: user.roomId });
+    if (room) {
+      res.status(200).json({ success: true, roomId: room.roomId });
     } else {
-      res.status(400).json({ err: "You are not the owner of this room." });
+      res.status(400).json({ error: "You are not the owner of this room." });
     }
-  } catch (err) {
-    res.status(500).json({ err: "Server error." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
 // delete room
-router.post("/deleteRoom", async (req, res) => {
+router.delete("/deleteRoom", verifyToken, async (req, res) => {
   try {
-    const user = await userInfo.findOne({ username: req.body.username });
-    const room = await roomInfo.findOne({ roomId: req.body.roomId });
+    const user = req.user;
+    const room = await roomInfo.findOne({ roomId: req.headers["roomid"] });
+
+    if (!room) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+
+    if (room.roomOwner !== user.username) {
+      return res
+        .status(401)
+        .json({ error: "You are not the owner of this room" });
+    }
 
     for (let roomMember of room.roomMembers) {
-      const updatedRoomJoined = await userInfo.updateOne(
+      await userInfo.updateOne(
         { username: roomMember.memberUsername },
-        { $pull: { roomsJoined: { roomId: req.body.roomId } } }
+        { $pull: { roomsJoined: { roomId: req.headers["roomid"] } } }
       );
     }
 
-    if (room.roomOwner === user.username) {
-      const deletedRoom = await roomInfo.deleteOne({
-        roomId: req.body.roomId,
-      });
-      res.status(200).json({
-        success: true,
-        deletedRoom: deletedRoom,
-      });
-    } else {
-      res.status(400).json({ err: "You are not the owner of this room." });
-    }
+    const deletedRoom = await roomInfo.deleteOne({
+      roomId: req.headers["roomid"],
+    });
+
+    res.status(200).json({
+      success: true,
+      deletedRoom: deletedRoom,
+    });
   } catch (err) {
     res.status(500).json({ err: "Server error." });
   }

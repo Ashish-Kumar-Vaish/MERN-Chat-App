@@ -1,14 +1,16 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
-import "./Chatlist.css";
+import "./RoomList.css";
 import { useNavigate, useLocation } from "react-router";
 import { useEffect, useState } from "react";
 import { socket } from "../../socketIO/socket.js";
 import { useSelector, useDispatch } from "react-redux";
 import { setCurrentRoom } from "../../redux/roomSlice.js";
 import { setRoomsJoined } from "../../redux/userSlice.js";
+import { getRoomsJoined } from "../../api/userApi.js";
+import { getRoomDetails } from "../../api/roomApi.js";
 
-const Chatlist = () => {
+const RoomList = () => {
   const [allRoomIds, setAllRoomIds] = useState([]);
   const [allRooms, setAllRooms] = useState([]);
   const [readyToFetch, setReadyToFetch] = useState(false);
@@ -52,17 +54,9 @@ const Chatlist = () => {
   // fetch rooms joined function
   const fetchRoomsJoined = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/user/roomsJoined`,
-        {
-          method: "GET",
-          headers: { username: user.username },
-        }
-      );
+      const result = await getRoomsJoined(user.username);
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         const uniqueRoomIds = Array.from(
           new Map(
             result.roomsJoined.map((room) => [
@@ -83,17 +77,9 @@ const Chatlist = () => {
   // fetch room details function
   const fetchRoomDetails = async (data) => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/rooms/roomDetails`,
-        {
-          method: "GET",
-          headers: { roomid: data },
-        }
-      );
+      const result = await getRoomDetails(data);
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         setAllRooms((prev) => {
           const updatedRooms = new Map(prev.map((room) => [room.roomId, room]));
           updatedRooms.set(result.roomDetails.roomId, {
@@ -157,7 +143,7 @@ const Chatlist = () => {
   }, [search]);
 
   return (
-    <div className="chatlist">
+    <div className="roomlist">
       <div className="inputBar">
         <input
           type="text"
@@ -175,25 +161,28 @@ const Chatlist = () => {
           </button>
         )}
       </div>
-      {!roomsDisplay.length ? (
-        <div className="noRooms">No rooms found</div>
-      ) : (
-        roomsDisplay.flat().map((info) => {
-          return (
-            <div key={info.roomId} className="roomBtnWrapper">
-              <button
-                className="roomBtn"
-                onClick={() => handleRoomConnection(info)}
-              >
-                <img src={info.roomPfp} className="roomProfilePicture"></img>
-                <span>{info.roomName}</span>
-              </button>
-            </div>
-          );
-        })
-      )}
+
+      <div className="scrollDiv">
+        {!roomsDisplay.length ? (
+          <div className="noRooms">No rooms found</div>
+        ) : (
+          roomsDisplay.flat().map((info) => {
+            return (
+              <div key={info.roomId} className="roomBtnWrapper">
+                <button
+                  className="roomBtn"
+                  onClick={() => handleRoomConnection(info)}
+                >
+                  <img src={info.roomPfp} className="roomProfilePicture"></img>
+                  <span>{info.roomName}</span>
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };
 
-export default Chatlist;
+export default RoomList;

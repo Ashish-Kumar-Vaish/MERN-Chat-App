@@ -26,7 +26,12 @@ main();
 // EXPRESS
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
-app.use(cors({ origin: process.env.FRONT_END_URL, methods: ["GET", "POST"] }));
+app.use(
+  cors({
+    origin: process.env.FRONT_END_URL,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
 
 // ENDPOINTS
 app.use("/api/auth", require("./routes/auth"));
@@ -37,30 +42,29 @@ app.use("/api/user", require("./routes/user"));
 // SOCKET.IO
 const roomInfo = require("./schemas/roomInfo");
 const userInfo = require("./schemas/userInfo");
+const directMessages = require("./schemas/directMessagesInfo");
 
-// push new message function
+// Push new message function
 const updateDB = async (roomId, newItems) => {
   try {
     const updatedChat = await roomInfo.findOneAndUpdate(
       { roomId: roomId },
-      {
-        $push: {
-          messageHistory: { $each: newItems },
-        },
-      },
+      { $push: { messageHistory: { $each: newItems } } },
       { new: true }
     );
+
     return updatedChat;
   } catch (error) {
     console.log(error);
   }
 };
 
+const userSockets = new Map();
+const roomMap = new Map();
+
 // io events
 io.on("connection", async (socket) => {
-  const roomMap = new Map();
-
-  // user connects to room
+  // User connects to room
   socket.on("userJoined", async (data) => {
     if (!data.username || !data.roomId) {
       return;
@@ -71,7 +75,9 @@ io.on("connection", async (socket) => {
 
     if (roomMap.has(socket.id) && roomMap.get(socket.id).has(socket.room)) {
       return;
-    } else if (!roomMap.has(socket.id)) {
+    }
+
+    if (!roomMap.has(socket.id)) {
       roomMap.set(socket.id, new Set());
     }
 
@@ -79,7 +85,7 @@ io.on("connection", async (socket) => {
     socket.join(socket.room);
   });
 
-  // user sends a message
+  // User sends a message
   socket.on("send", async (data) => {
     const newItems = [
       {
@@ -94,16 +100,24 @@ io.on("connection", async (socket) => {
     if (updatedChat) {
       socket.to(socket.room).emit("receive", {
         message: data.message,
-        position: "left",
+        position: "relative",
         senderUsername: data.senderUsername,
       });
     }
   });
 
-  // user disconnects
+  // User disconnects
   socket.on("disconnect", async () => {
-    if (!socket.username) {
-      return;
+    if (socket.username) {
+      const userSet = userSockets.get(socket.username);
+
+      if (userSet) {
+        userSet.delete(socket.id);
+
+        if (userSet.size === 0) {
+          userSockets.delete(socket.username);
+        }
+      }
     }
 
     const roomsToLeave = roomMap.get(socket.id);
@@ -117,7 +131,7 @@ io.on("connection", async (socket) => {
     }
   });
 
-  // join room
+  // Join room
   socket.on("joinRoom", async (data) => {
     if (!data.username || !data.roomId) {
       return;
@@ -170,7 +184,7 @@ io.on("connection", async (socket) => {
     }
   });
 
-  // leave room
+  // Leave room
   socket.on("leaveRoom", async (data) => {
     const updatedRooms = await userInfo.updateOne(
       { username: data.username },
@@ -200,11 +214,113 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // Update pfp
   socket.on("updatePfp", (data) => {
     io.emit("pfpUpdated", {
       username: data.username,
       newPfpUrl: data.newPfpUrl,
     });
+  });
+
+  // Private Connect
+  socket.on("privateConnect", async (data) => {
+    if (!data.username) {
+      return;
+    }
+
+    socket.username = data.username;
+
+    if (!userSockets.has(data.username)) {
+      userSockets.set(data.username, new Set());
+    }
+    userSockets.get(data.username).add(socket.id);
+  });
+
+  // Private Message
+  socket.on("privateMessage", async (data) => {
+    if (data.senderUsername === data.receiverUsername) return;
+
+    const emitToUserSockets = (username, payload) => {
+      const sockets = userSockets.get(username);
+      if (sockets) {
+        sockets.forEach((id) => {
+          io.to(id).emit("receivePrivateMessage", payload);
+        });
+      }
+    };
+
+    const messagePayload = {
+      message: data.message,
+      senderUsername: data.senderUsername,
+    };
+
+    const conversationUsers =
+      (await directMessages.findOne({
+        users: [data.senderUsername, data.receiverUsername],
+      })) ||
+      (await directMessages.findOne({
+        users: [data.receiverUsername, data.senderUsername],
+      }));
+
+    if (conversationUsers) {
+      const updatedConversation = await directMessages.findOneAndUpdate(
+        { _id: conversationUsers._id },
+        {
+          $push: {
+            messages: {
+              $each: [
+                { message: data.message, senderUsername: data.senderUsername },
+              ],
+            },
+          },
+        },
+        { new: true }
+      );
+
+      if (updatedConversation) {
+        emitToUserSockets(data.senderUsername, messagePayload);
+        emitToUserSockets(data.receiverUsername, messagePayload);
+      }
+    } else {
+      const newConversation = await directMessages.create({
+        users: [data.senderUsername, data.receiverUsername],
+        messages: [
+          {
+            message: data.message,
+            senderUsername: data.senderUsername,
+          },
+        ],
+      });
+
+      await userInfo.findOneAndUpdate(
+        { username: data.senderUsername },
+        {
+          $push: {
+            chatWithUsers: {
+              $each: [{ username: data.receiverUsername }],
+            },
+          },
+        },
+        { new: true }
+      );
+
+      await userInfo.findOneAndUpdate(
+        { username: data.receiverUsername },
+        {
+          $push: {
+            chatWithUsers: {
+              $each: [{ username: data.senderUsername }],
+            },
+          },
+        },
+        { new: true }
+      );
+
+      if (newConversation) {
+        emitToUserSockets(data.senderUsername, messagePayload);
+        emitToUserSockets(data.receiverUsername, messagePayload);
+      }
+    }
   });
 });
 
@@ -212,6 +328,6 @@ io.on("connection", async (socket) => {
 const port = process.env.PORT || 8000;
 httpServer.listen(port, () => {
   console.log(
-    `The server has started successfully on port http://localhost:${port}`
+    `The server has started successfully on http://localhost:${port}`
   );
 });

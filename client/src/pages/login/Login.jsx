@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./login.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../redux/userSlice.js";
 import { useForm } from "react-hook-form";
+import { loginUser, getVerifiedUserDetails } from "../../api/authApi";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -14,6 +15,7 @@ const Login = () => {
     setError,
     formState: { errors, isSubmitting },
   } = useForm();
+  const [loginType, setLoginType] = useState("username");
 
   // navigate to "/" if already logged in
   useEffect(() => {
@@ -25,19 +27,12 @@ const Login = () => {
   // fetch user data from server
   const fetchData = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
-        {
-          method: "GET",
-          headers: { token: localStorage.auth_token },
-        }
-      );
+      const result = await getVerifiedUserDetails(localStorage.auth_token);
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         dispatch(
           setUser({
+            email: result.email,
             name: result.name,
             username: result.username,
             pfp: result.pfp,
@@ -53,32 +48,26 @@ const Login = () => {
   // login user
   const onSubmit = async (data, e) => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: data.username.trim(),
-            password: data.password.trim(),
-          }),
-        }
-      );
+      const loginData =
+        loginType === "email"
+          ? { email: data.email.trim(), password: data.password.trim() }
+          : { username: data.username.trim(), password: data.password.trim() };
 
-      const result = await response.json();
+      const result = await loginUser(loginData);
 
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         localStorage.setItem("auth_token", result.authtoken);
         dispatch(
           setUser({
             name: result.name,
             username: result.username,
+            email: result.email,
             pfp: result.pfp,
           })
         );
         navigate("/");
       } else {
-        setError("myform", { type: "string", message: "Login failed" });
+        setError("myform", { type: "string", message: result.error });
       }
     } catch (error) {
       setError("myform", { type: "string", message: error.message });
@@ -89,32 +78,66 @@ const Login = () => {
     <div className="login">
       <div className="container">
         <h1>Login</h1>
+        <button
+          type="button"
+          className="loginTypeBtn"
+          onClick={() =>
+            loginType === "email"
+              ? setLoginType("username")
+              : setLoginType("email")
+          }
+        >
+          Login Using {loginType === "email" ? "username" : "email"}?
+        </button>
+
         <form className="myForm" onSubmit={handleSubmit(onSubmit)}>
-          <label>Username</label>
-          <input
-            type="text"
-            placeholder="Enter your username"
-            {...register("username", {
-              required: { value: true, message: "Username is required." },
-              minLength: {
-                value: 3,
-                message: "Minimum 3 characters are required.",
-              },
-              maxLength: {
-                value: 20,
-                message: "Maximum 20 characters are allowed.",
-              },
-              validate: (value) => {
-                if (!/^\S*$/.test(value)) {
-                  return "Username cannot contain whitespace";
-                }
-                if (!/^[a-z0-9_]+$/.test(value)) {
-                  return "Only lowercase letters, numbers, and underscores are allowed";
-                }
-              },
-            })}
-          />
-          {errors.username && <p className="err">{errors.username.message}</p>}
+          {loginType === "email" ? (
+            <>
+              <label>Email</label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                {...register("email", {
+                  required: { value: true, message: "Email is required." },
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address",
+                  },
+                })}
+              />
+              {errors.email && <p className="err">{errors.email.message}</p>}
+            </>
+          ) : (
+            <>
+              <label>Username</label>
+              <input
+                type="text"
+                placeholder="Enter your username"
+                {...register("username", {
+                  required: { value: true, message: "Username is required." },
+                  minLength: {
+                    value: 3,
+                    message: "Minimum 3 characters are required.",
+                  },
+                  maxLength: {
+                    value: 20,
+                    message: "Maximum 20 characters are allowed.",
+                  },
+                  validate: (value) => {
+                    if (!/^\S*$/.test(value)) {
+                      return "Username cannot contain whitespace";
+                    }
+                    if (!/^[a-z0-9_]+$/.test(value)) {
+                      return "Only lowercase letters, numbers, and underscores are allowed";
+                    }
+                  },
+                })}
+              />
+              {errors.username && (
+                <p className="err">{errors.username.message}</p>
+              )}
+            </>
+          )}
 
           <label>Password</label>
           <input
@@ -129,6 +152,7 @@ const Login = () => {
             })}
           />
           {errors.password && <p className="err">{errors.password.message}</p>}
+
           <button
             className="btn"
             type="submit"

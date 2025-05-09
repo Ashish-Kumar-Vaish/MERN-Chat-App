@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-// DEFINE CHAT SCHEMA
+// DEFINE ROOM SCHEMA
 const chatSchema = new mongoose.Schema({
   roomName: {
     type: String,
@@ -21,7 +21,7 @@ const chatSchema = new mongoose.Schema({
   },
   roomDescription: {
     type: String,
-    maxlength: 200,
+    maxlength: 400,
     trim: true,
   },
   roomOwner: {

@@ -5,10 +5,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMagnifyingGlass,
   faChevronLeft,
-  faHammer,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { useForm } from "react-hook-form";
+import { getFeaturedRooms, searchRooms } from "../../../api/roomApi";
 
 const Rooms = () => {
   const [featuredRooms, setFeaturedRooms] = useState([]);
@@ -32,16 +32,9 @@ const Rooms = () => {
   // fetch featured rooms function
   const fetchFeaturedRooms = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/rooms/featuredRooms`,
-        {
-          method: "GET",
-        }
-      );
+      const result = await getFeaturedRooms();
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         const uniqueRooms = Array.from(
           new Map(
             result.featuredRooms.map((room) => [
@@ -70,20 +63,9 @@ const Rooms = () => {
     }
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/rooms/search`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            searchRooms: data.search.trim(),
-          }),
-        }
-      );
+      const result = await searchRooms(data.search);
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         const uniqueRooms = Array.from(
           new Map(
             result.searchedRooms.map((room) => [
@@ -101,6 +83,7 @@ const Rooms = () => {
       } else {
         setFeaturedRooms([]);
         setHome(false);
+        console.log(result.error);
       }
     } catch (error) {
       console.log(error);
@@ -125,7 +108,7 @@ const Rooms = () => {
         </button>
         <form
           className="myForm"
-          autocomplete="off"
+          autoComplete="off"
           onSubmit={handleSubmit(onSubmit)}
         >
           <input
@@ -162,23 +145,9 @@ const Rooms = () => {
           </button>
         </form>
       </div>
+      
       <div className="container">
         <div className="gridContainer">
-          {home && (
-            <div className="createRoomBtnWrapper">
-              <button
-                className="createRoomBtn"
-                onClick={() => navigate("/createRoom")}
-              >
-                <FontAwesomeIcon
-                  icon={faHammer}
-                  className="roomProfilePicture"
-                />
-                <span>Create Room</span>
-              </button>
-            </div>
-          )}
-
           {!featuredRooms.length ? (
             <div className="noFeaturedRooms">
               <span>No rooms to display</span>

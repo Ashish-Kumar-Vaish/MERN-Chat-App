@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import "./MessagePfp.css";
 import { socket } from "../../socketIO/socket.js";
+import { getUserDetails } from "../../api/userApi.js";
+import { useNavigate } from "react-router-dom";
 
 const MessagePfp = ({ msg }) => {
+  const navigate = useNavigate();
   const [pfpUrl, setPfpUrl] = useState("/assets/defaultPfp.png");
 
+  // useEffect to fetch and set pfp
   useEffect(() => {
     handlePfp(msg);
 
@@ -13,7 +17,7 @@ const MessagePfp = ({ msg }) => {
     });
 
     return () => {
-      socket.off("pfpUpdated", handlePfpUpdate);
+      socket.off("pfpUpdated");
     };
   }, [msg]);
 
@@ -24,27 +28,14 @@ const MessagePfp = ({ msg }) => {
     }
   };
 
-  // handle pfp
+  // handle pfp load
   const handlePfp = async (msg) => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/user/getUserPfp`,
-        {
-          method: "GET",
-          headers: { username: msg.senderUsername },
-        }
-      );
+    const result = await getUserDetails(msg.senderUsername);
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
-        setPfpUrl(result.userPfp);
-        return result.userPfp;
-      } else {
-        return "/assets/defaultPfp.png";
-      }
-    } catch (error) {
-      return "/assets/defaultPfp.png";
+    if (result.success) {
+      setPfpUrl(result.pfp);
+    } else {
+      console.error("Error fetching user details:", result.error);
     }
   };
 
@@ -52,6 +43,7 @@ const MessagePfp = ({ msg }) => {
     <div
       className="newMsgPfp"
       style={{ backgroundImage: `url(${pfpUrl})` }}
+      onClick={() => navigate(`/user/${msg.senderUsername}`)}
     ></div>
   );
 };

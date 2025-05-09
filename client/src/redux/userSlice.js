@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   name: "",
   username: "",
+  email: "",
   pfp: "",
   roomsJoined: [{}],
 };
@@ -14,6 +15,7 @@ export const userSlice = createSlice({
     setUser: (state, action) => {
       state.name = action.payload.name;
       state.username = action.payload.username;
+      state.email = action.payload.email;
       state.pfp = action.payload.pfp;
     },
     setRoomsJoined: (state, action) => {
@@ -22,6 +24,7 @@ export const userSlice = createSlice({
     clearUser: (state) => {
       state.name = "";
       state.username = "";
+      state.email = "";
       state.pfp = "";
       state.roomsJoined = [{}];
     },

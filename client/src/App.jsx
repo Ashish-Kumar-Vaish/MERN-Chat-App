@@ -1,15 +1,9 @@
 import { createBrowserRouter, RouterProvider } from "react-router";
-import Home from "./pages/home/Home.jsx";
-import AboutRoom from "./pages/home/aboutRoom/AboutRoom.jsx";
-import Chat from "./pages/home/chat/Chat.jsx";
-import CreateRoom from "./pages/home/createRoom/CreateRoom.jsx";
-import Rooms from "./pages/home/rooms/Rooms.jsx";
-import Login from "./pages/login/Login.jsx";
-import Signup from "./pages/signup/Signup.jsx";
-import Settings from "./pages/settings/Settings.jsx";
-import Account from "./pages/settings/account/Account.jsx";
-import Profile from "./pages/settings/profile/Profile.jsx";
-import Nothing from "./components/nothing/Nothing.jsx";
+import { Nothing } from "./components";
+import { Home, Login, Signup, Settings } from "./pages";
+import { AboutRoom, Chat, CreateRoom, Inbox, Rooms, User } from "./pages/home";
+import { DirectMessages, Friends } from "./pages/home/inbox";
+import { Account, Profile } from "./pages/settings";
 
 function App() {
   const router = createBrowserRouter([
@@ -36,6 +30,31 @@ function App() {
         {
           path: "createRoom",
           element: <CreateRoom />,
+        },
+        {
+          path: "inbox",
+          element: <Inbox />,
+          children: [
+            {
+              index: true,
+              element: <Nothing image={"/assets/chatAppLogo.png"} />,
+            },
+            {
+              path: "friends",
+              element: <Friends />,
+              children: [
+                {
+                  path: "add",
+                  element: null,
+                },
+              ],
+            },
+            { path: "dm/:username", element: <DirectMessages /> },
+          ],
+        },
+        {
+          path: "user/:username",
+          element: <User />,
         },
       ],
     },

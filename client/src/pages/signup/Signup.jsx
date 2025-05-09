@@ -2,6 +2,7 @@ import React from "react";
 import "./signup.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { signupUser } from "../../api/authApi";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -15,24 +16,16 @@ const Signup = () => {
   // signup user
   const onSubmit = async (data, e) => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/signup`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: data.username.trim(),
-            password: data.password.trim(),
-          }),
-        }
-      );
+      const result = await signupUser({
+        email: data.email.trim(),
+        username: data.username.trim(),
+        password: data.password.trim(),
+      });
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         navigate("/login");
       } else {
-        setError("myForm", { type: "string", message: result.err });
+        setError("myForm", { type: "string", message: result.error });
       }
     } catch (error) {
       setError("myForm", { type: "string", message: error.message });
@@ -44,6 +37,20 @@ const Signup = () => {
       <div className="container">
         <h1>Sign Up</h1>
         <form className="myForm" onSubmit={handleSubmit(onSubmit)}>
+          <label>Email</label>
+          <input
+            type="email"
+            placeholder="Enter your email"
+            {...register("email", {
+              required: { value: true, message: "Email is required." },
+              pattern: {
+                value: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
+                message: "Invalid email address",
+              },
+            })}
+          />
+          {errors.email && <p className="err">{errors.email.message}</p>}
+
           <label>Username</label>
           <input
             type="text"

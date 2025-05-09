@@ -1,8 +1,11 @@
 .signup {
-  margin-top: 5vmin;
+  padding: 5vh 0;
+  height: 90vh;
+  width: 100vw;
+  background: url(/assets/bg-dark.jpg);
 
   h1 {
-    color: rgb(49, 51, 56);
+    color: rgb(213, 213, 213);
     font-size: 8vmin;
     text-align: center;
   }
@@ -13,11 +16,21 @@
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    color: rgb(49, 51, 56);
+    color: rgb(213, 213, 213);
     width: 70vmin;
-    border: 0.3vmin solid black;
+    border: 0.15vmin solid rgb(213, 213, 213);
     border-radius: 2.2vmin;
     backdrop-filter: blur(2px);
+
+    .loginTypeBtn {
+      cursor: pointer;
+      border: 0.15vmin solid rgb(213, 213, 213);
+      border-radius: 1.1vmin;
+      background-color: rgb(49, 51, 56);
+      color: rgb(213, 213, 213);
+      margin: 2vmin 0;
+      padding: 2%;
+    }
 
     .myForm {
       display: flex;
@@ -37,7 +50,7 @@
         background-color: rgb(49, 51, 56);
         width: 96%;
         margin-bottom: 2vmin;
-        border: none;
+        border: 0.15vmin solid rgb(213, 213, 213);
         border-radius: 1.1vmin;
         padding: 2%;
       }
@@ -64,6 +77,10 @@
     p {
       text-align: center;
       margin-bottom: 2vmin;
+
+      a {
+        color: rgb(92, 132, 255);
+      }
     }
   }
 }

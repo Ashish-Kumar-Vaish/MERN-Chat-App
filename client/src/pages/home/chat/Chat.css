@@ -128,22 +128,10 @@
       }
 
       .left {
-        /* background: linear-gradient(
-          270deg,
-          rgb(55, 132, 255),
-          rgb(72, 143, 255),
-          rgb(116, 168, 255)
-        ); */
         background-color: rgb(27, 28, 30);
       }
 
       .right {
-        /* background: linear-gradient(
-          90deg,
-          rgb(55, 132, 255),
-          rgb(72, 143, 255),
-          rgb(116, 168, 255)
-        ); */
         background-color: rgb(55, 132, 255);
       }
 

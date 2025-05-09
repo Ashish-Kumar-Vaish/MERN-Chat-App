@@ -12,6 +12,7 @@ import { socket } from "../../../socketIO/socket.js";
 import { useSelector, useDispatch } from "react-redux";
 import { setCurrentRoom, clearCurrentRoom } from "../../../redux/roomSlice.js";
 import { useForm } from "react-hook-form";
+import { getRoomDetails, editRoom, deleteRoom } from "../../../api/roomApi";
 
 const AboutRoom = () => {
   const navigate = useNavigate();
@@ -35,11 +36,11 @@ const AboutRoom = () => {
   // convert file to base64
   const convertToBase64 = (pfp) => {
     return new Promise((resolve, reject) => {
-      if (!pfp) return resolve("");
+      if (!pfp) return resolve(null);
 
       const reader = new FileReader();
       reader.readAsDataURL(pfp);
-      reader.onloadend = () => resolve(reader.result);
+      reader.onload = () => resolve(reader.result);
       reader.onerror = (error) => reject(error);
     });
   };
@@ -63,30 +64,20 @@ const AboutRoom = () => {
   // form submit
   const onSubmit = async (data, e) => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/rooms/editRoom`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            roomId: room.roomId,
-            roomPfp: data.roomPfp,
-            roomName: data.roomName,
-            roomDescription: data.roomDescription,
-            senderUsername: user.username,
-          }),
-        }
-      );
+      const result = await editRoom({
+        roomName: data.roomName,
+        roomId: room.roomId,
+        roomPfp: data.roomPfp,
+        roomDescription: data.roomDescription,
+      });
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         dispatch(clearCurrentRoom({}));
         setCheckEdit(false);
         setRoom({});
         navigate(`/about/${result.roomId}`);
       } else {
-        setError("myForm", { type: "string", message: result.err });
+        setError("myForm", { type: "string", message: result.error });
       }
     } catch (error) {
       setError("myForm", { type: "string", message: error.message });
@@ -103,17 +94,9 @@ const AboutRoom = () => {
   // fetch room details like description
   const fetchRoomDetails = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/rooms/roomDetails`,
-        {
-          method: "GET",
-          headers: { roomid: roomId },
-        }
-      );
+      const result = await getRoomDetails(roomId);
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         setRoom({
           roomId: result.roomDetails.roomId,
           roomName: result.roomDetails.roomName,
@@ -191,20 +174,9 @@ const AboutRoom = () => {
   // delete room
   const handleDeleteRoom = async (room) => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/rooms/deleteRoom`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            roomId: room.roomId,
-            username: user.username,
-          }),
-        }
-      );
-      const result = await response.json();
+      const result = await deleteRoom(room.roomId);
 
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         dispatch(clearCurrentRoom());
         navigate("/rooms");
       }
@@ -235,11 +207,13 @@ const AboutRoom = () => {
         </button>
         <span>Room Description</span>
       </div>
+
       {!checkEdit && (
         <div className="container">
           <div className="room">
             <div className="roomDetail">
               <img src={room.roomPfp} className="roomProfilePicture"></img>
+
               <div className="roomNameWrapper">
                 <div className="roomName">
                   <span>{room.roomName}</span>
@@ -250,10 +224,12 @@ const AboutRoom = () => {
                     </span>
                   </div>
                 </div>
+
                 <div className="roomOwner">
                   <FontAwesomeIcon icon={faCrown} />
                   <span>@{room.roomOwner}</span>
                 </div>
+
                 <div className="buttonWrapper">
                   {checkJoined(room) ? (
                     <>
@@ -287,7 +263,9 @@ const AboutRoom = () => {
               </div>
             </div>
           </div>
+
           <div className="roomDescription">{room.roomDescription}</div>
+
           {room.roomOwner === user.username && checkJoined(room) && (
             <div className="ownerSettings">
               <div className="buttonWrapper">
@@ -337,11 +315,11 @@ const AboutRoom = () => {
                       },
                       minLength: {
                         value: 3,
-                        message: "Minimum 3 characters required.",
+                        message: "Minimum 3 characters are required.",
                       },
                       maxLength: {
                         value: 25,
-                        message: "Maximum 25 characters allowed.",
+                        message: "Maximum 25 characters are allowed.",
                       },
                     })}
                   />
@@ -351,6 +329,7 @@ const AboutRoom = () => {
                 </div>
               </div>
             </div>
+
             <div className="roomDescription">
               <label>Room Description</label>
               <textarea
@@ -359,8 +338,8 @@ const AboutRoom = () => {
                 placeholder="Enter Room Description"
                 {...register("roomDescription", {
                   maxLength: {
-                    value: 200,
-                    message: "Maximum 200 characters allowed.",
+                    value: 400,
+                    message: "Maximum 400 characters are allowed.",
                   },
                 })}
               />

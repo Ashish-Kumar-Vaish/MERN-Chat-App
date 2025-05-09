@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import "./Chat.css";
-import Loader from "../../../components/loader/Loader.jsx";
+import { Loader, MessagePfp } from "../../../components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { socket } from "../../../socketIO/socket.js";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import MessagePfp from "../../../components/messagePfp/MessagePfp.jsx";
+import { getRoomHistory } from "../../../api/historyApi.js";
 
 const Chat = () => {
   const [message, setMessage] = useState("");
@@ -35,31 +35,19 @@ const Chat = () => {
 
   // Fetch history function
   const fetchHistory = async () => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/history/getHistory`,
-        {
-          method: "GET",
-          headers: { roomid: currentRoom.currentRoomId },
-        }
-      );
+    const result = await getRoomHistory(currentRoom.currentRoomId);
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
-        setChatHistory(result.history);
-        setScrollProgress(true);
-      }
-    } catch (error) {
-      console.log(error);
+    if (result.success) {
+      setChatHistory(result.history);
+      setScrollProgress(true);
+    } else {
+      console.error("Error fetching history:", result.error);
     }
   };
 
   // SOCKET IO OPERATIONS
   useEffect(() => {
     if (user.username && currentRoom.currentRoomId) {
-      socket.connect();
-
       socket.on("connect", () => {
         handleConnect();
       });
@@ -76,7 +64,6 @@ const Chat = () => {
     return () => {
       socket.off("connect");
       socket.off("receive");
-      socket.off("left");
       socket.off("otherUserLeftRoom");
     };
   }, [user.username, currentRoom.currentRoomId]);
@@ -101,10 +88,10 @@ const Chat = () => {
       },
     ]);
 
-    // console.log(chatContainerRef.current.scrollTop); // 2208
-    // console.log(chatContainerRef.current.clientHeight); // 556
-    // console.log(chatContainerRef.current.scrollHeight); // 2764
-
+    if (chatContainerRef.current && data.senderUsername === user.username) {
+      setScrollProgress(true);
+      return;
+    }
     if (
       chatContainerRef.current.scrollTop +
         chatContainerRef.current.clientHeight >=
@@ -127,7 +114,7 @@ const Chat = () => {
       ...prev,
       {
         message: msg,
-        position: "right",
+        position: "relative",
         senderUsername: user.username,
       },
     ]);
@@ -193,6 +180,12 @@ const Chat = () => {
     return groups;
   };
 
+  // memo to save computation
+  const groupedMessagesMemo = useMemo(
+    () => groupedMessages(chatHistory),
+    [chatHistory]
+  );
+
   return (
     <div className="chatWrapper">
       {!currentRoom.currentRoomId ? (
@@ -223,7 +216,7 @@ const Chat = () => {
             {!chatHistory.length ? (
               <Loader />
             ) : (
-              groupedMessages(chatHistory).map((group, index) => {
+              groupedMessagesMemo.map((group, index) => {
                 const consecutiveMessages = group[0];
 
                 return (

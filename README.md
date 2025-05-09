@@ -1,13 +1,11 @@
-
-# React Chat App
+# MERN Chat App
 
 A real time chat app build by using Vite + React
 
 
-
 ## Tech Stack
 
-**Client:** React, Redux, React-Hook-Form
+**Client:** React, Redux, React-Hook-Form, React-Router
 
 **Server:** Node, Express, Socket.io, MongoDB, JWT
 
@@ -35,8 +33,6 @@ To run this project, you will need to add the following environment variables to
 ## 🔗 Links
 [![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ashishkumarvaish)
 
-## 🛠 Skills
-Javascript, HTML, CSS, MongoDB, Express, React, Node, C, C++ as of February 2025
 
 ## Screenshots
 

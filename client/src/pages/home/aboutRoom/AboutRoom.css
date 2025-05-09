@@ -21,13 +21,9 @@
       width: 7vmin;
       aspect-ratio: 1;
 
-      svg {
-        aspect-ratio: 1;
+      &:hover {
+        color: rgb(140, 144, 150);
       }
-    }
-
-    .backBtn:hover {
-      color: rgb(140, 144, 150);
     }
 
     span {

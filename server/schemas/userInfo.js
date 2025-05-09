@@ -32,6 +32,13 @@ const chatSchema = new mongoose.Schema({
       },
     ],
   },
+  email: {
+    type: String,
+    required: true,
+    match: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
+    trim: true,
+    unique: true,
+  },
   password: {
     type: String,
     required: true,
@@ -41,13 +48,41 @@ const chatSchema = new mongoose.Schema({
     required: true,
     default: "/assets/defaultPfp.png",
   },
-  email: {
-    type: String,
-    required: true,
-  },
   roomsJoined: [
     {
       roomId: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
+  chatWithUsers: [
+    {
+      username: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
+  friends: [
+    {
+      username: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
+  requests: [
+    {
+      username: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
+  sentFriendRequests: [
+    {
+      username: {
         type: String,
         required: true,
       },

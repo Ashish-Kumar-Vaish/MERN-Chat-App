@@ -1,13 +1,16 @@
-.chatlist {
+.roomlist {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  overflow-y: scroll;
-  scrollbar-width: none;
+  overflow: hidden;
+
+  .scrollDiv {
+    overflow-y: scroll;
+    scrollbar-width: none;
+  }
 
   .inputBar {
-    height: 7vmin;
     width: 100%;
     background-color: rgba(17, 25, 40, 0.5);
     display: flex;
@@ -20,6 +23,7 @@
       outline: none;
       color: rgb(213, 213, 213);
       width: 100%;
+      height: 7vmin;
       margin-left: 1.4vmin;
     }
 

@@ -1,13 +1,18 @@
 import React, { useEffect } from "react";
 import "./Home.css";
-import Chatlist from "../../components/chatlist/Chatlist.jsx";
-import Loader from "../../components/loader/Loader.jsx";
+import { RoomList, Loader } from "../../components";
 import { Outlet } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { setUser } from "../../redux/userSlice.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGlobe } from "@fortawesome/free-solid-svg-icons";
+import {
+  faGlobe,
+  faHammer,
+  faMessage,
+} from "@fortawesome/free-solid-svg-icons";
+import { socket } from "../../socketIO/socket.js";
+import { getVerifiedUserDetails } from "../../api/authApi";
 
 const Home = () => {
   const user = useSelector((state) => state.user);
@@ -27,21 +32,14 @@ const Home = () => {
   // fetch user data
   const fetchData = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
-        {
-          method: "GET",
-          headers: { token: localStorage.auth_token },
-        }
-      );
+      const result = await getVerifiedUserDetails(localStorage.auth_token);
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         dispatch(
           setUser({
             name: result.name,
             username: result.username,
+            email: result.email,
             pfp: result.pfp,
           })
         );
@@ -54,11 +52,29 @@ const Home = () => {
     }
   };
 
+  // useeffect to connect to socket
+  useEffect(() => {
+    if (user.username) {
+      socket.on("connect", () => {
+        handleConnect();
+      });
+    }
+  }, [user.username]);
+
+  // handle connect to socket
+  const handleConnect = () => {
+    socket.emit("privateConnect", {
+      username: user.username,
+    });
+  };
+
   return (
     <>
       <div className="chat">
         <div className="list">
-          <div className="logo">Chat App</div>
+          <div className="logo">
+            <button onClick={() => navigate("/")}>Chat App</button>
+          </div>
 
           <div className="userInfo">
             <div className="user" onClick={() => navigate("/settings")}>
@@ -74,9 +90,35 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="discover">
+          <div className="btnWrapper">
             <button
-              className="discoverRoomBtn"
+              className="btn"
+              onClick={() =>
+                !location.pathname.startsWith("/inbox") && navigate("/inbox")
+              }
+            >
+              <span>Inbox</span>
+              <FontAwesomeIcon icon={faMessage} />
+            </button>
+          </div>
+
+          <div className="line"></div>
+
+          <div className="btnWrapper">
+            <button
+              className="btn"
+              onClick={() =>
+                location.pathname !== "/createRoom" && navigate("/createRoom")
+              }
+            >
+              <span>Create New Room</span>
+              <FontAwesomeIcon icon={faHammer} />
+            </button>
+          </div>
+
+          <div className="btnWrapper">
+            <button
+              className="btn"
               onClick={() =>
                 location.pathname !== "/rooms" && navigate("/rooms")
               }
@@ -86,7 +128,7 @@ const Home = () => {
             </button>
           </div>
 
-          <Chatlist />
+          <RoomList />
         </div>
 
         <Outlet />

@@ -1,101 +1,124 @@
 require("dotenv").config();
 const express = require("express");
-const bcrypt = require("bcrypt");
-const userInfo = require("../schemas/userInfo");
 const router = express.Router();
+const userInfo = require("../schemas/userInfo");
+const bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
 // SIGNUP post
 router.post("/signup", async (req, res) => {
-  const parameter = {
-    name: req.body.username,
-    username: req.body.username,
-    password: req.body.password,
-  };
-
-  const existingUser = await userInfo.findOne({ username: parameter.name });
-
-  if (existingUser) {
-    res
-      .status(201)
-      .json(Object.assign(parameter, { err: "Username already exists." }));
-  } else {
-    if (parameter.password.length < 8) {
-      return res.status(201).json(
-        Object.assign(parameter, {
-          err: "Password should be atleast 8 characters long.",
-        })
-      );
-    }
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(parameter.password, saltRounds);
-    parameter.password = hashedPassword;
-
-    try {
-      const user = await userInfo.insertMany(parameter);
-      res.json({ name: parameter.name, success: true });
-    } catch (err) {
-      res.status(500).json(Object.assign(parameter, { err: `${err.errors}` }));
-    }
-  }
-});
-
-// LOGIN get
-router.get("/login", async (req, res) => {
   try {
-    const jwtResult = jwt.verify(req.headers["token"], JWT_SECRET);
+    const { email, username, password } = req.body;
 
-    if (jwtResult) {
-      const decodedJWT = jwt.decode(req.headers["token"], JWT_SECRET);
-      const checkName = await userInfo.findOne({ _id: decodedJWT.id });
+    const existingUser = await userInfo.findOne({
+      $or: [{ email }, { username }],
+    });
 
-      res.json({
-        success: true,
-        name: checkName.name,
-        username: checkName.username,
-        pfp: checkName.pfp,
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        error:
+          existingUser.email === email
+            ? "Email already in use."
+            : "Username already in use.",
       });
-    } else {
-      res.status(400).json({ success: false, err: "Invalid token." });
     }
-  } catch (err) {
-    res.status(500).json({ success: false, err: "Modified auth token." });
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        error: "Password must be at least 8 characters long.",
+      });
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const newUser = await userInfo.create({
+      email: email,
+      name: username,
+      username: username,
+      password: hashedPassword,
+    });
+
+    if (!newUser) {
+      return res.status(500).json({ success: false, error: "Server error." });
+    }
+
+    res.json({ success: true, username: newUser.username });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 // LOGIN post
 router.post("/login", async (req, res) => {
-  const parameter = {
-    name: req.body.username,
-    username: req.body.username,
-    password: req.body.password,
-  };
+  const { email, username, password } = req.body;
 
   try {
-    const checkName = await userInfo.findOne({ username: parameter.name });
+    const user = email
+      ? await userInfo.findOne({ email: email })
+      : await userInfo.findOne({ username: username });
 
-    if (
-      checkName &&
-      (await bcrypt.compare(parameter.password, checkName.password))
-    ) {
-      const data = { username: checkName.username, id: checkName._id };
-      const authtoken = jwt.sign(data, JWT_SECRET);
-
-      res.json({
-        success: true,
-        authtoken,
-        name: checkName.name,
-        username: checkName.username,
-        pfp: checkName.pfp,
-      });
-    } else {
-      res
-        .status(400)
-        .json(Object.assign(parameter, { err: "Wrong Username or Password." }));
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
     }
-  } catch (err) {
-    res.status(500).json(Object.assign(parameter, { err: "Server error." }));
+
+    const authtoken = jwt.sign(
+      { username: user.username, id: user._id },
+      JWT_SECRET,
+      { expiresIn: "14d" }
+    );
+
+    res.json({
+      success: true,
+      authtoken,
+      email: user.email,
+      name: user.name,
+      username: user.username,
+      pfp: user.pfp,
+    });
+  } catch (error) {
+    res.status(500).json(Object.assign(parameter, { error: "Server error." }));
+  }
+});
+
+// GET me
+router.get("/me", async (req, res) => {
+  try {
+    const auth = req.headers["token"];
+
+    if (!auth) {
+      res.status(401).json({ error: "Token is not formatted correctly." });
+    }
+
+    let jwtResult;
+    try {
+      jwtResult = jwt.verify(auth, JWT_SECRET);
+    } catch (error) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid or expired token." });
+    }
+
+    const user = await userInfo.findOne({ _id: jwtResult.id });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found." });
+    }
+
+    res.json({
+      success: true,
+      email: user.email,
+      name: user.name,
+      username: user.username,
+      pfp: user.pfp,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

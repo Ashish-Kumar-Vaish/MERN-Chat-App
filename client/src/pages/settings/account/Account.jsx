@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { clearUser } from "../../../redux/userSlice.js";
 import { clearCurrentRoom } from "../../../redux/roomSlice.js";
 import { socket } from "../../../socketIO/socket.js";
+import { deleteUser } from "../../../api/userApi.js";
 
 const Account = () => {
   const user = useSelector((state) => state.user);
@@ -23,20 +24,9 @@ const Account = () => {
   // delete account permanently
   const handleAccountDeletion = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/user/deleteUser`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: user.username,
-          }),
-        }
-      );
+      const result = await deleteUser(user.username);
 
-      const result = await response.json();
-
-      if (response.status === 200 && result.success) {
+      if (result.success) {
         localStorage.removeItem("auth_token");
         socket.disconnect();
         dispatch(clearUser());
