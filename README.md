@@ -13,8 +13,13 @@ A real time chat app build by using Vite + React
 ## Features
 
 - Real Time Chat
-- Search Different Rooms to Join
+- Search Rooms to Join
+- Search Users
+- User Profile
+- Direct Messages
+- Add Friends
 - Create, Edit & Delete User and Room Information
+
 
 
 ## Environment Variables
