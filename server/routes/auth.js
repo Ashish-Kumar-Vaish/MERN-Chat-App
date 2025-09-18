@@ -82,7 +82,7 @@ router.post("/login", async (req, res) => {
       pfp: user.pfp,
     });
   } catch (error) {
-    res.status(500).json(Object.assign(parameter, { error: "Server error." }));
+    res.status(500).json(Object.assign(parameter, { error: "Server error: " + error.message }));
   }
 });
 

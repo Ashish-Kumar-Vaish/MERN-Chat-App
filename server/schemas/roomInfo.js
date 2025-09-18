@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const messageSchema = require("./messageSchema");
 
 // DEFINE ROOM SCHEMA
 const chatSchema = new mongoose.Schema({
@@ -36,26 +37,7 @@ const chatSchema = new mongoose.Schema({
       },
     },
   ],
-  messageHistory: [
-    {
-      message: {
-        type: String,
-        required: true,
-      },
-      position: {
-        type: String,
-        required: true,
-      },
-      senderUsername: {
-        type: String,
-        required: true,
-      },
-      timestamp: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
+  messageHistory: [messageSchema],
 });
 
 const roomInfo = mongoose.model("roomInfo", chatSchema);

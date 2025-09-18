@@ -33,58 +33,75 @@ router.get("/roomDetails", async (req, res) => {
         roomMembers: room.roomMembers,
       },
     });
-  } catch (err) {
-    res.status(500).json({ error: "Server error." });
+  } catch (error) {
+    res.status(500).json({ error: "Server error: " + error.message });
   }
 });
 
 // featured rooms
 router.get("/featuredRooms", async (req, res) => {
   try {
+    const offset = parseInt(req.query.offset) || 0;
+    const limit = parseInt(req.query.limit) || 10;
+
     const featuredRooms = await roomInfo
       .find({}, { roomId: 1, roomName: 1, roomPfp: 1, _id: 0 })
-      .limit(10);
+      .skip(offset)
+      .limit(limit);
 
-    if (featuredRooms) {
-      res.json({
-        success: true,
-        featuredRooms: featuredRooms,
-      });
-    } else {
-      res.status(400).json({ err: "No featured rooms." });
+    if (!featuredRooms.length) {
+      return res.status(400).json({ error: "No featured rooms." });
     }
-  } catch (err) {
-    res.status(500).json({ err: "Server error." });
+
+    const totalRooms = await roomInfo.countDocuments();
+
+    res.json({
+      success: true,
+      featuredRooms: featuredRooms,
+      hasMore: offset + limit < totalRooms,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Server error: " + error.message });
   }
 });
 
 // Search rooms
 router.post("/searchRooms", async (req, res) => {
   try {
-    const { searchRooms } = req.body;
+    const { searchQuery } = req.body;
 
-    if (!searchRooms) {
+    if (!searchQuery) {
       return res.status(400).json({ error: "Search query is required." });
     }
 
+    const offset = parseInt(req.query.offset) || 0;
+    const limit = parseInt(req.query.limit) || 10;
+
     const searchedRooms = await roomInfo
       .find(
-        { roomName: new RegExp(searchRooms, "i") },
+        { roomName: new RegExp(searchQuery, "i") },
         { roomId: 1, roomName: 1, roomPfp: 1, _id: 0 }
       )
-      .sort({ roomMembers: 1 })
-      .limit(15);
+      .collation({ locale: "en", strength: 2 })
+      .sort({ roomName: 1 })
+      .skip(offset)
+      .limit(limit);
 
-    if (!searchedRooms) {
+    if (!searchedRooms.length) {
       return res.status(400).json({ error: "No rooms found." });
     }
+
+    const totalRooms = await roomInfo.countDocuments({
+      roomName: new RegExp(searchQuery, "i"),
+    });
 
     res.json({
       success: true,
       searchedRooms: searchedRooms,
+      hasMore: offset + limit < totalRooms,
     });
-  } catch (err) {
-    res.status(500).json({ err: "Server error." });
+  } catch (error) {
+    res.status(500).json({ error: "Server error: " + error.message });
   }
 });
 
@@ -211,8 +228,8 @@ router.delete("/deleteRoom", verifyToken, async (req, res) => {
       success: true,
       deletedRoom: deletedRoom,
     });
-  } catch (err) {
-    res.status(500).json({ err: "Server error." });
+  } catch (error) {
+    res.status(500).json({ error: "Server error: " + error.message });
   }
 });
 

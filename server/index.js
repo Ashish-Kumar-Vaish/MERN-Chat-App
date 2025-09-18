@@ -1,7 +1,11 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const connectDB = require("./config/db");
+
+// Init
 const app = express();
-require("dotenv").config();
+connectDB();
 
 // Node server which will handle socket.io connections
 const { createServer } = require("http");
@@ -10,18 +14,6 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: { origin: process.env.FRONT_END_URL },
 });
-
-// Connect to MongoDB
-const mongoose = require("mongoose");
-async function main() {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("Connected to MongoDB!");
-  } catch (error) {
-    console.error("Failed to connect to MongoDB", error);
-  }
-}
-main();
 
 // EXPRESS
 app.use(express.json({ limit: "50mb" }));
@@ -38,14 +30,19 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/history", require("./routes/history"));
 app.use("/api/rooms", require("./routes/rooms"));
 app.use("/api/user", require("./routes/user"));
+app.use("/api/upload", require("./routes/upload"));
 
 // SOCKET.IO
+const userSockets = new Map();
+const roomMap = new Map();
+
+// schemas
 const roomInfo = require("./schemas/roomInfo");
 const userInfo = require("./schemas/userInfo");
 const directMessages = require("./schemas/directMessagesInfo");
 
 // Push new message function
-const updateDB = async (roomId, newItems) => {
+const updateRoomMessageHistory = async (roomId, newItems) => {
   try {
     const updatedChat = await roomInfo.findOneAndUpdate(
       { roomId: roomId },
@@ -55,15 +52,12 @@ const updateDB = async (roomId, newItems) => {
 
     return updatedChat;
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
-const userSockets = new Map();
-const roomMap = new Map();
-
 // io events
-io.on("connection", async (socket) => {
+io.on("connection", (socket) => {
   // User connects to room
   socket.on("userJoined", async (data) => {
     if (!data.username || !data.roomId) {
@@ -89,19 +83,28 @@ io.on("connection", async (socket) => {
   socket.on("send", async (data) => {
     const newItems = [
       {
-        message: data.message,
+        message: data.message || null,
+        media: data.media || [],
         position: "relative",
         senderUsername: data.senderUsername,
+        status: "sent",
       },
     ];
 
-    const updatedChat = await updateDB(socket.room, newItems);
+    const updatedChat = await updateRoomMessageHistory(socket.room, newItems);
 
     if (updatedChat) {
       socket.to(socket.room).emit("receive", {
-        message: data.message,
-        position: "relative",
-        senderUsername: data.senderUsername,
+        ...newItems[0],
+        status: "sent",
+        createdAt: updatedChat.messageHistory.slice(-1)[0].createdAt,
+      });
+
+      socket.emit("messageConfirmed", {
+        ...newItems[0],
+        clientId: data.clientId,
+        _id: updatedChat.messageHistory.slice(-1)[0]._id,
+        createdAt: updatedChat.messageHistory.slice(-1)[0].createdAt,
       });
     }
   });
@@ -151,7 +154,7 @@ io.on("connection", async (socket) => {
       },
     ];
 
-    const updatedChat = await updateDB(data.roomId, newItems);
+    const updatedChat = await updateRoomMessageHistory(data.roomId, newItems);
 
     const addRoom = await userInfo.findOneAndUpdate(
       { username: data.username },
@@ -176,11 +179,7 @@ io.on("connection", async (socket) => {
     );
 
     if (addRoom && updatedChat && addRoomMember) {
-      socket.to(data.roomId).emit("receive", {
-        message: newItems[0].message,
-        position: newItems[0].position,
-        senderUsername: newItems[0].senderUsername,
-      });
+      socket.to(data.roomId).emit("receive", newItems[0]);
     }
   });
 
@@ -204,12 +203,13 @@ io.on("connection", async (socket) => {
       },
     ];
 
-    const updatedChat = await updateDB(data.roomId, newItems);
+    const updatedChat = await updateRoomMessageHistory(data.roomId, newItems);
 
     if (updatedRooms && updatedRoomMembers && updatedChat) {
       socket.to(data.roomId).emit("otherUserLeftRoom", {
         username: data.username,
       });
+
       socket.leave(data.roomId);
     }
   });
@@ -233,25 +233,34 @@ io.on("connection", async (socket) => {
     if (!userSockets.has(data.username)) {
       userSockets.set(data.username, new Set());
     }
+
     userSockets.get(data.username).add(socket.id);
   });
 
   // Private Message
   socket.on("privateMessage", async (data) => {
-    if (data.senderUsername === data.receiverUsername) return;
+    if (data.senderUsername === data.receiverUsername) {
+      return;
+    }
 
-    const emitToUserSockets = (username, payload) => {
+    // emit to all sockets of a user except the sender socket
+    const emitToUserSockets = (username, payload, skipSocketId = null) => {
       const sockets = userSockets.get(username);
+
       if (sockets) {
         sockets.forEach((id) => {
-          io.to(id).emit("receivePrivateMessage", payload);
+          if (id !== skipSocketId) {
+            io.to(id).emit("receivePrivateMessage", payload);
+          }
         });
       }
     };
 
     const messagePayload = {
-      message: data.message,
+      message: data.message || null,
+      media: data.media || [],
       senderUsername: data.senderUsername,
+      status: "sent",
     };
 
     const conversationUsers =
@@ -268,9 +277,7 @@ io.on("connection", async (socket) => {
         {
           $push: {
             messages: {
-              $each: [
-                { message: data.message, senderUsername: data.senderUsername },
-              ],
+              $each: [messagePayload],
             },
           },
         },
@@ -278,18 +285,24 @@ io.on("connection", async (socket) => {
       );
 
       if (updatedConversation) {
-        emitToUserSockets(data.senderUsername, messagePayload);
+        // Emit to receiver's sockets
         emitToUserSockets(data.receiverUsername, messagePayload);
+
+        // Emit to sender's OTHER sockets (not the one that sent the message)
+        emitToUserSockets(data.senderUsername, messagePayload, socket.id);
+
+        // Confirm message receipt to sender
+        socket.emit("privateMessageConfirmed", {
+          ...messagePayload,
+          clientId: data.clientId,
+          _id: updatedConversation.messages.slice(-1)[0]._id,
+          createdAt: updatedConversation.messages.slice(-1)[0].createdAt,
+        });
       }
     } else {
       const newConversation = await directMessages.create({
         users: [data.senderUsername, data.receiverUsername],
-        messages: [
-          {
-            message: data.message,
-            senderUsername: data.senderUsername,
-          },
-        ],
+        messages: [messagePayload],
       });
 
       await userInfo.findOneAndUpdate(
@@ -317,8 +330,19 @@ io.on("connection", async (socket) => {
       );
 
       if (newConversation) {
-        emitToUserSockets(data.senderUsername, messagePayload);
+        // Emit to receiver's sockets
         emitToUserSockets(data.receiverUsername, messagePayload);
+
+        // Emit to sender's OTHER sockets (not the one that sent the message)
+        emitToUserSockets(data.senderUsername, messagePayload, socket.id);
+
+        // Confirm message receipt to sender
+        socket.emit("privateMessageConfirmed", {
+          ...messagePayload,
+          clientId: data.clientId,
+          _id: newConversation.messages[0]._id,
+          createdAt: newConversation.messages[0].createdAt,
+        });
       }
     }
   });

@@ -19,8 +19,8 @@ router.get("/roomsJoined", verifyToken, async (req, res) => {
       success: true,
       roomsJoined: user.roomsJoined,
     });
-  } catch (err) {
-    res.status(500).json({ error: "Server error." });
+  } catch (error) {
+    res.status(500).json({ error: "Server error: " + error.message });
   }
 });
 
@@ -145,8 +145,8 @@ router.put("/editUser", verifyToken, async (req, res) => {
     } else {
       res.status(400).json({ error: "You are not authorized." });
     }
-  } catch (err) {
-    res.status(500).json({ error: "Server error." });
+  } catch (error) {
+    res.status(500).json({ error: "Server error: " + error.message });
   }
 });
 
@@ -576,8 +576,8 @@ router.post("/searchUsers", async (req, res) => {
       success: true,
       searchedUsers: searchedUsers,
     });
-  } catch (err) {
-    res.status(500).json({ err: "Server error." });
+  } catch (error) {
+    res.status(500).json({ error: "Server error: " + error.message });
   }
 });
 

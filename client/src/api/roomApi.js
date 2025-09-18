@@ -18,10 +18,12 @@ export const getRoomDetails = async (roomId) => {
 };
 
 // Featured rooms
-export const getFeaturedRooms = async () => {
+export const getFeaturedRooms = async (offset = 0, limit = 10) => {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/api/rooms/featuredRooms`,
+      `${
+        import.meta.env.VITE_BACKEND_URL
+      }/api/rooms/featuredRooms?offset=${offset}&limit=${limit}`,
       {
         method: "GET",
         headers: {
@@ -37,16 +39,18 @@ export const getFeaturedRooms = async () => {
 };
 
 // Search rooms
-export const searchRooms = async (searchRooms) => {
+export const searchRooms = async (searchQuery, offset = 0, limit = 10) => {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/api/rooms/searchRooms`,
+      `${
+        import.meta.env.VITE_BACKEND_URL
+      }/api/rooms/searchRooms?offset=${offset}&limit=${limit}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ searchRooms: searchRooms.trim() }),
+        body: JSON.stringify({ searchQuery: searchQuery.trim() }),
       }
     );
 

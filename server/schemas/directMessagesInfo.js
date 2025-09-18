@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const messageSchema = require("./messageSchema");
 
 // DEFINE DIRECT MESSAGES SCHEMA
 const directMessagesSchema = new mongoose.Schema({
@@ -8,22 +9,7 @@ const directMessagesSchema = new mongoose.Schema({
       required: true,
     },
   ],
-  messages: [
-    {
-      message: {
-        type: String,
-        required: true,
-      },
-      senderUsername: {
-        type: String,
-        required: true,
-      },
-      timestamp: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
+  messages: [messageSchema],
 });
 
 const directMessages = mongoose.model("directMessages", directMessagesSchema);

@@ -1,13 +1,112 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import "tailwindcss";
+
+:root {
+  /* === LAYOUT & STRUCTURE === */
+  --app-bg: rgb(49, 51, 56);
+  --top-navigation-bg: rgb(56, 58, 64);
+  --sidebar-panel-bg: rgb(39, 40, 45);
+  --login-bg: rgb(25, 25, 25);
+
+  /* === SCROLLBAR SYSTEM === */
+  --scrollbar-track-bg: var(--app-bg);
+  --scrollbar-thumb-default: oklch(
+    from var(--scrollbar-track-bg) calc(l - 0.07) c h
+  );
+  --scrollbar-thumb-hover: oklch(
+    from var(--scrollbar-thumb-default) calc(l - 0.05) c h
+  );
+  --scrollbar-thumb-active: oklch(
+    from var(--scrollbar-thumb-hover) calc(l - 0.05) c h
+  );
+
+  /* === MESSAGING INTERFACE === */
+  --message-container-bg: rgb(36, 37, 40);
+  --message-sender-left: rgb(27, 28, 30);
+  --message-sender-right: rgb(55, 132, 255);
+  --message-system-center: rgb(177, 181, 187);
+  --message-timestamp: rgb(153, 157, 162);
+
+  /* === INPUT & FORMS === */
+  --input-field-bg: rgba(17, 25, 40, 0.5);
+  --input-text: rgb(213, 213, 213);
+  --placeholder-dim: rgba(180, 185, 192, 0.26);
+  --send-button-hover: rgb(140, 144, 150);
+
+  /* === TEXT & CONTENT === */
+  --primary-text: rgb(213, 213, 213);
+  --secondary-text: rgb(180, 185, 192);
+  --dimmed-text: rgba(180, 185, 192, 0.5);
+  --inactive-text: rgb(141, 141, 141);
+  --username-dim: rgba(180, 185, 192, 0.5);
+  --logo-text: rgba(213, 213, 213, 0.8);
+  --logo-shadow: rgb(26, 26, 26);
+  --error-message: rgb(255, 0, 0);
+
+  /* === INTERACTIVE ELEMENTS === */
+  /* Search Controls */
+  --search-button-text: rgb(129, 133, 138);
+  --search-button-hover-text: oklch(
+    from var(--search-button-text) calc(l + 0.1) c h
+  );
+
+  /* Room Navigation */
+  --room-button-bg: var(--app-bg);
+  --room-button-hover-bg: oklch(from var(--room-button-bg) calc(l + 0.1) c h);
+
+  /* Action Buttons */
+  --action-button-bg: rgb(37, 39, 43);
+  --action-button-text: rgb(180, 185, 192);
+  --action-button-hover-bg: oklch(
+    from var(--action-button-bg) calc(l + 0.1) c h
+  );
+  --action-button-hover-text: oklch(
+    from var(--action-button-text) calc(l + 0.1) c h
+  );
+
+  /* Contextual Buttons */
+  --danger-button-bg: rgb(179, 0, 0);
+  --danger-button-text: rgb(192, 196, 202);
+  --danger-button-hover-bg: oklch(
+    from var(--danger-button-bg) calc(l + 0.1) c h
+  );
+  --primary-button-bg: rgb(65, 113, 255);
+  --primary-button-text: rgb(192, 196, 202);
+  --primary-button-hover-bg: oklch(
+    from var(--primary-button-bg) calc(l + 0.1) c h
+  );
+
+  /* === SIDEBAR & NAVIGATION === */
+  --list-border: rgb(40, 40, 40);
+  --list-item-text: rgb(180, 185, 192);
+  --nav-button-bg: var(--app-bg);
+  --nav-button-text: var(--primary-text);
+  --nav-button-hover-bg: oklch(from var(--nav-button-bg) calc(l + 0.1) c h);
+  --nav-button-hover-text: oklch(from var(--nav-button-text) calc(l + 0.1) c h);
+  --divider-line: var(--inactive-text);
+  --pfp-border: var(--inactive-text); /* rgb(130, 130, 130); */
+
+  /* === ACCENT COLORS === */
+  --accent-blue-soft: rgb(140, 190, 255);
+  --accent-gold: rgb(255, 212, 59);
+
+  /* === TEXT & CONTENT === */
+  --overlay-text-dim: rgba(213, 213, 213, 0.4);
+  --form-placeholder: rgba(180, 185, 192, 0.256);
+
+  /* === INTERACTIVE ELEMENTS === */
+  --overlay-dark: rgba(0, 0, 0, 0.45);
+  --overlay-button-bg: rgba(0, 0, 0, 0.7);
+  --overlay-button-hover: rgba(0, 0, 0, 0.6);
+}
+
 * {
   font-family: "Outfit", sans-serif;
-  font-size: 2.2vmin;
+}
+
+body {
   padding: 0;
   margin: 0;
-
-  body {
-    background-color: rgb(49, 51, 56);
-  }
 }
 
 a {
@@ -19,20 +118,32 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgb(49, 51, 56);
+  background: var(--scrollbar-track-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgb(40, 40, 44);
-  border: 0.5vmin solid rgb(49, 51, 56);
+  background: var(--scrollbar-thumb-default);
+  border: 0.4vmin solid var(--app-bg);
   border-radius: 100vw;
   min-height: 5vmin;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(37, 38, 41);
+  background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background: rgb(32, 33, 36);
+  background: var(--scrollbar-thumb-active);
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.07;
+  }
+  100% {
+    opacity: 0;
+  }
 }

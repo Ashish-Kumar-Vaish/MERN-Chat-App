@@ -5,7 +5,7 @@ const initialState = {
   username: "",
   email: "",
   pfp: "",
-  roomsJoined: [{}],
+  roomsJoined: [],
 };
 
 export const userSlice = createSlice({
@@ -26,7 +26,7 @@ export const userSlice = createSlice({
       state.username = "";
       state.email = "";
       state.pfp = "";
-      state.roomsJoined = [{}];
+      state.roomsJoined = [];
     },
   },
 });

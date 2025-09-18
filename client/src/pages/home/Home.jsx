@@ -1,5 +1,4 @@
-import React, { useEffect } from "react";
-import "./Home.css";
+import { useEffect } from "react";
 import { RoomList, Loader } from "../../components";
 import { Outlet } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
@@ -13,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { socket } from "../../socketIO/socket.js";
 import { getVerifiedUserDetails } from "../../api/authApi";
+import Button from "../../components/ui/Button";
 
 const Home = () => {
   const user = useSelector((state) => state.user);
@@ -44,21 +44,25 @@ const Home = () => {
           })
         );
       } else {
-        console.log("auth token not found:", result.err);
+        console.error("Auth token not found:", result.error);
         navigate("/login");
       }
     } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
     }
   };
 
   // useeffect to connect to socket
   useEffect(() => {
     if (user.username) {
-      socket.on("connect", () => {
-        handleConnect();
-      });
+      handleConnect();
+
+      socket.on("connect", handleConnect);
     }
+
+    return () => {
+      socket.off("connect", handleConnect);
+    };
   }, [user.username]);
 
   // handle connect to socket
@@ -70,62 +74,98 @@ const Home = () => {
 
   return (
     <>
-      <div className="chat">
-        <div className="list">
-          <div className="logo">
-            <button onClick={() => navigate("/")}>Chat App</button>
-          </div>
-
-          <div className="userInfo">
-            <div className="user" onClick={() => navigate("/settings")}>
-              <img src={user.pfp} className="profilePicture"></img>
-              {user.name && user.username ? (
-                <div className="nameDiv">
-                  <span className="name">{user.name}</span>
-                  <span className="username">@{user.username}</span>
-                </div>
-              ) : (
-                <Loader />
-              )}
-            </div>
-          </div>
-
-          <div className="btnWrapper">
+      <div className="flex h-screen bg-[var(--app-bg)]">
+        <div className="flex flex-col w-60 md:w-80 gap-y-2 border-r border-[var(--list-border)] text-[var(--list-item-text)]">
+          <div className="text-xl md:text-2xl lg:text-3xl text-center my-2">
             <button
-              className="btn"
+              onClick={() => navigate("/")}
+              className="cursor-pointer w-full text-xl md:text-2xl text-[var(--logo-text)]"
+              style={{
+                fontFamily: "Audiowide",
+                textShadow: "0.15rem 0.15rem 0.1rem var(--logo-shadow)",
+                letterSpacing: "0.5rem",
+              }}
+            >
+              Chat App
+            </button>
+          </div>
+
+          <div
+            className="flex items-center cursor-pointer w-full mb-2"
+            onClick={() => navigate("/settings")}
+          >
+            <img
+              src={user.pfp}
+              className="h-9 w-9 md:h-12 md:w-12 border border-[var(--pfp-border)] rounded-full object-cover mx-4"
+              alt="Profile"
+            />
+
+            {user.name && user.username ? (
+              <div className="flex flex-col overflow-hidden whitespace-nowrap">
+                <span className="text-base md:text-lg lg:text-xl truncate">
+                  {user.name}
+                </span>
+                <span className="text-xs md:text-sm lg:text-base truncate">
+                  @{user.username}
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col overflow-hidden gap-1 md:gap-1.5 lg:gap-2">
+                <div className="w-30 md:w-35 lg:w-45 h-3 md:h-4 lg:h-5">
+                  <Loader />
+                </div>
+                <div className="w-20 md:w-25 lg:w-35 h-2 md:h-3 lg:h-4">
+                  <Loader />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col items-center justify-center">
+            <Button
+              variant="nav"
               onClick={() =>
                 !location.pathname.startsWith("/inbox") && navigate("/inbox")
               }
             >
               <span>Inbox</span>
-              <FontAwesomeIcon icon={faMessage} />
-            </button>
+              <FontAwesomeIcon
+                icon={faMessage}
+                className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 ml-2 md:ml-4"
+              />
+            </Button>
           </div>
 
-          <div className="line"></div>
+          <div className="w-[90%] h-px bg-[var(--divider-line)] mx-auto"></div>
 
-          <div className="btnWrapper">
-            <button
-              className="btn"
+          <div className="flex flex-col items-center justify-center">
+            <Button
+              variant="nav"
               onClick={() =>
                 location.pathname !== "/createRoom" && navigate("/createRoom")
               }
             >
               <span>Create New Room</span>
-              <FontAwesomeIcon icon={faHammer} />
-            </button>
+              <FontAwesomeIcon
+                icon={faHammer}
+                className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 ml-2 md:ml-4"
+              />
+            </Button>
           </div>
 
-          <div className="btnWrapper">
-            <button
-              className="btn"
+          <div className="flex flex-col items-center justify-center">
+            <Button
+              variant="nav"
               onClick={() =>
                 location.pathname !== "/rooms" && navigate("/rooms")
               }
             >
               <span>Discover Rooms</span>
-              <FontAwesomeIcon icon={faGlobe} />
-            </button>
+              <FontAwesomeIcon
+                icon={faGlobe}
+                className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 ml-2 md:ml-4"
+              />
+            </Button>
           </div>
 
           <RoomList />
